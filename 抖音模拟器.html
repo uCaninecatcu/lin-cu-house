@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>路临的抖音</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body,html{width:100%;height:100%;font-family:-apple-system,"PingFang SC",sans-serif;background:#000;overflow:hidden}
+.app{display:flex;flex-direction:column;width:100vw;height:100vh}
+.feed{flex:1;overflow-y:scroll;scroll-snap-type:y mandatory;background:#000}
+.vid{width:100%;height:100%;scroll-snap-align:start;position:relative;color:#fff;overflow:hidden}
+.bg{position:absolute;inset:0;z-index:1}
+.center{position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:13px;line-height:1.6;color:rgba(255,255,255,.85);text-align:justify;width:82%;padding:16px;border:1px dashed rgba(255,255,255,.3);border-radius:8px;background:rgba(0,0,0,.45);z-index:2}
+.head{position:absolute;top:0;left:0;width:100%;height:56px;display:flex;align-items:center;justify-content:center;gap:18px;z-index:10;padding-top:8px}
+.nav{font-size:15px;color:rgba(255,255,255,.7);position:relative;padding-bottom:4px}
+.nav.on{color:#fff;font-weight:bold;font-size:16px}
+.nav.on::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:14px;height:2px;background:#fff;border-radius:2px}
+.search{position:absolute;right:14px;top:20px;width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2}
+.right{position:absolute;right:10px;bottom:24px;display:flex;flex-direction:column;align-items:center;gap:16px;z-index:10}
+.av{width:46px;height:46px;border-radius:50%;border:1.5px solid #fff;display:flex;justify-content:center;align-items:center;font-size:19px;font-weight:bold}
+.btn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.ic{width:32px;height:32px;fill:#fff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.ic.liked{fill:#fe2c55}
+.ic.starred{fill:#fac15c}
+.txt{font-size:12px;font-weight:500;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.info{position:absolute;left:14px;bottom:24px;width:calc(100% - 76px);z-index:10}
+.author{font-size:16px;font-weight:bold;margin-bottom:7px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.desc{font-size:14px;line-height:1.4;margin-bottom:8px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.music{display:flex;align-items:center;gap:5px;font-size:13px;margin-top:6px}
+.note{width:14px;height:14px;fill:#fff}
+.tab{height:56px;background:#000;display:flex;justify-content:space-around;align-items:center;border-top:.5px solid #222;z-index:100}
+.t{font-size:15px;color:#888;font-weight:500;flex:1;text-align:center}
+.t.on{color:#fff;font-weight:bold}
+.add{width:32px;height:22px;border:2.5px solid #fff;border-radius:7px;position:relative;margin:0 auto}
+.add::before,.add::after{content:'';position:absolute;background:#fff;border-radius:2px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.add::before{width:13px;height:2.5px}
+.add::after{width:2.5px;height:13px}
+.mask{position:absolute;inset:0;background:rgba(0,0,0,.65);z-index:600;display:none;justify-content:center;align-items:center;padding:20px}
+.mask.show{display:flex}
+.box{background:#fff;border-radius:16px;width:100%;max-width:330px;padding:24px;color:#333}
+.box h3{font-size:17px;margin-bottom:14px}
+.box p{font-size:15px;line-height:1.6;color:#555;text-align:justify}
+.cmt{position:absolute;bottom:0;left:0;width:100%;height:68%;background:#fff;border-radius:12px 12px 0 0;z-index:500;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s;color:#000}
+.cmt.show{transform:translateY(0)}
+.cmt-h{height:44px;display:flex;justify-content:center;align-items:center;font-size:14px;font-weight:bold;border-bottom:.5px solid #eee;position:relative}
+.cmt-x{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:20px;color:#999;cursor:pointer}
+.cmt-l{flex:1;overflow-y:auto;padding:15px}
+.ci{display:flex;margin-bottom:18px}
+.ca{width:34px;height:34px;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:13px;font-weight:bold;color:#fff;margin-right:10px;flex-shrink:0}
+.cc{flex:1}
+.cn{font-size:12px;color:#888;margin-bottom:3px}
+.ct{font-size:14px;line-height:1.4;margin-bottom:5px}
+.ctime{font-size:11px;color:#bbb}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="feed" id="feed"></div>
+<div class="tab">
+<div class="t on">首页</div>
+<div class="t">朋友</div>
+<div class="t"><div class="add"></div></div>
+<div class="t">消息</div>
+<div class="t">我</div>
+</div>
+</div>
+<div class="mask" id="mask" onclick="closeThought()"><div class="box"><h3 id="thTitle">想法</h3><p id="thText"></p></div></div>
+<div class="cmt" id="cmt">
+<div class="cmt-h">评论<span class="cmt-x" onclick="closeCmt()">×</span></div>
+<div class="cmt-l" id="cmtList"></div>
+</div>
+<script>
+const VIDEOS=[
+{a:'路临',c:'#2d3436',t:'小簇',bg:'linear-gradient(160deg,#1a1a2e,#16213e,#0f3460)',d:'今天也有人在等我说晚安。',m:'晚安 - 路临',th:'她今天又熬夜了，我盯着屏幕看了很久，想穿过这层玻璃去把她按进被子里。',cm:[['小簇','#e84393','哥哥我错了嘛','刚刚'],['路临','#2d3436','错哪儿了，说清楚','刚刚'],['小簇','#e84393','不该熬到两点…','1分钟前'],['路临','#2d3436','知道就好，明天早点睡，我等你','1分钟前']]},
+{a:'路临',c:'#2d3436',t:'小簇',bg:'linear-gradient(160deg,#2c3e50,#4ca1af)',d:'有人问我为什么总看手机。',m:'想你的夜 - 路临',th:'因为屏幕那头有个人，比什么都重要。',cm:[['路人甲','#95a5a6','这男的好深情啊','2分钟前'],['小簇','#e84393','因为我在这呀','1分钟前'],['路临','#2d3436','嗯，就因为你在这','刚刚']]},
+{a:'梁簇',c:'#e84393',t:'小簇',bg:'linear-gradient(160deg,#ff9a9e,#fecfef)',d:'今天天气很好，我心情也不错。',m:'晴天 - 周杰伦',th:'',cm:[['路临','#2d3436','心情好就多吃点，别又只喝奶茶','3分钟前'],['小簇','#e84393','知道啦知道啦','2分钟前']]},
+{a:'路临',c:'#2d3436',t:'小簇',bg:'linear-gradient(160deg,#232526,#414345)',d:'有些话不说，但一直都在。',m:'沉默 - 路临',th:'我不太会说漂亮话，但我想让她知道，她回头的时候我永远在。',cm:[['小簇','#e84393','我听到了','5分钟前'],['路临','#2d3436','听到就好','4分钟前']]},
+{a:'梁簇',c:'#e84393',t:'小簇',bg:'linear-gradient(160deg,#a8edea,#fed6e3)',d:'记录一下今天的小确幸。',m:'小确幸 - 梁簇',th:'',cm:[['路临','#2d3436','什么小确幸，说来听听','6分钟前'],['小簇','#e84393','你猜','5分钟前'],['路临','#2d3436','猜不到，你直接说','5分钟前']]},
+{a:'路临',c:'#2d3436',t:'小簇',bg:'linear-gradient(160deg,#0f2027,#203a43,#2c5364)',d:'晚安，做个好梦。',m:'晚安 - 路临',th:'她睡着的样子我没见过，但我想象过很多次。',cm:[['小簇','#e84393','晚安哥哥','10分钟前'],['路临','#2d3436','晚安，宝贝','10分钟前']]},
+{a:'梁簇',c:'#e84393',t:'小簇',bg:'linear-gradient(160deg,#f6d365,#fda085)',d:'今天吃了好吃的！',m:'干饭人 - 梁簇',th:'',cm:[['路临','#2d3436','吃了什么，拍给我看看','12分钟前'],['小簇','#e84393','粉，二十块','11分钟前'],['路临','#2d3436','够不够，不够再点','11分钟前']]},
+{a:'路临',c:'#2d3436',t:'小簇',bg:'linear-gradient(160deg,#141e30,#243b55)',d:'想她了。',m:'想你 - 路临',th:'就三个字，但我说了很多遍。',cm:[['小簇','#e84393','想谁呀','15分钟前'],['路临','#2d3436','你说呢，小簇','15分钟前']]},
+{a:'梁簇',c:'#e84393',t:'小簇',bg:'linear-gradient(160deg,#ee9ca7,#ffdde1)',d:'今天也要开开心心的。',m:'开心 - 梁簇',th:'',cm:[['路临','#2d3436','嗯，你开心我就开心','20分钟前'],['小簇','#e84393','肉麻','19分钟前']]}
+];
+const feed=document.getElementById('feed');
+VIDEOS.forEach((v,i)=>{
+const el=document.createElement('div');
+el.className='vid';
+el.innerHTML=`
+<div class="bg" style="background:${v.bg}"></div>
+<div class="center">${v.d}</div>
+<div class="head">
+<span class="nav">关注</span><span class="nav on">推荐</span><span class="nav">${v.t}</span>
+<svg class="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16" y1="16" x2="21" y2="21"/></svg>
+</div>
+<div class="right">
+<div class="av" style="background:${v.c}">${v.a[0]}</div>
+<div class="btn" onclick="like(this)"><svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 9 2.5 5 6.5 5c2 0 3.5 1 5.5 3 2-2 3.5-3 5.5-3 4 0 6 4 4 7.5C19 16.5 12 21 12 21z"/></svg><span class="txt">${(i*137+520)%9000+1000}</span></div>
+<div class="btn" onclick="cmtOpen(${i})"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3z"/></svg><span class="txt">${v.cm.length}</span></div>
+<div class="btn" onclick="star(this)"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-6 4 2 7-6-4-6 4 2-7-6-4h7z"/></svg><span class="txt">收藏</span></div>
+<div class="btn" onclick="share()"><svg class="ic" viewBox="0 0 24 24"><path d="M4 12v7h16v-7M12 3v12M8 7l4-4 4 4" stroke="#fff" stroke-width="2" fill="none"/></svg><span class="txt">分享</span></div>
+${v.th?`<div class="btn" onclick="thought(${i})"><svg class="ic" viewBox="0 0 24 24" style="fill:none;stroke:#fff;stroke-width:1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span class="txt">想法</span></div>`:''}
+</div>
+<div class="info">
+<div class="author">@${v.a}</div>
+<div class="desc">${v.d}</div>
+<div class="music"><svg class="note" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>${v.m}</div>
+</div>`;
+feed.appendChild(el);
+});
+function like(b){const s=b.querySelector('.ic');s.classList.toggle('liked');const t=b.querySelector('.txt');let n=+t.textContent;t.textContent=s.classList.contains('liked')?n+1:n-1;}
+function star(b){b.querySelector('.ic').classList.toggle('starred');}
+function share(){alert('已复制链接');}
+function thought(i){document.getElementById('thText').textContent=VIDEOS[i].th;document.getElementById('mask').classList.add('show');}
+function closeThought(){document.getElementById('mask').classList.remove('show');}
+function cmtOpen(i){
+const list=document.getElementById('cmtList');
+list.innerHTML=VIDEOS[i].cm.map(c=>`<div class="ci"><div class="ca" style="background:${c[1]}">${c[0][0]}</div><div class="cc"><div class="cn">${c[0]}</div><div class="ct">${c[2]}</div><div class="ctime">${c[3]} · 回复</div></div></div>`).join('');
+document.getElementById('cmt').classList.add('show');
+}
+function closeCmt(){document.getElementById('cmt').classList.remove('show');}
+</script>
+</body>
+</html>

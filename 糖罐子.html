@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>小簇的糖罐子</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: radial-gradient(circle at 50% 20%, #fff3f8 0%, #ffe3ef 40%, #ffd0e4 100%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    user-select:none;
+  }
+  .title {
+    position:absolute; top:26px; width:100%; text-align:center;
+    font-size:19px; letter-spacing:3px; color:#e87ba8;
+    font-weight:600; text-shadow:0 1px 0 #fff;
+  }
+  .subtitle {
+    position:absolute; top:56px; width:100%; text-align:center;
+    font-size:12px; color:#f0a8c6; letter-spacing:1px;
+  }
+  .jar-wrap { position:relative; width:250px; height:300px; display:flex; align-items:flex-end; justify-content:center; }
+
+  /* 玻璃罐 */
+  .jar {
+    position:absolute; bottom:0; width:200px; height:230px;
+    background:linear-gradient(160deg, rgba(255,255,255,.85), rgba(255,225,238,.55));
+    border:3px solid rgba(255,255,255,.9);
+    border-radius:26px 26px 34px 34px;
+    box-shadow: inset -12px 0 24px rgba(255,255,255,.9), inset 12px 0 22px rgba(232,123,168,.18), 0 12px 30px rgba(232,123,168,.25);
+    overflow:hidden;
+  }
+  .jar::before {
+    content:""; position:absolute; top:0; left:0; right:0; height:16px;
+    background:linear-gradient(#ffd9e8,#ffc3dc);
+    border-bottom:2px solid rgba(255,255,255,.8);
+  }
+  .jar::after {
+    content:""; position:absolute; top:26px; left:18px; width:14px; height:120px;
+    background:linear-gradient(rgba(255,255,255,.95), rgba(255,255,255,0));
+    border-radius:8px; transform:rotate(6deg);
+  }
+  /* 罐口 */
+  .lid {
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:150px; height:26px; border-radius:14px;
+    background:linear-gradient(#ffb8d4,#f58cb4);
+    box-shadow:0 4px 10px rgba(232,123,168,.4), inset 0 2px 0 rgba(255,255,255,.6);
+    z-index:5;
+  }
+
+  /* 罐里的糖 */
+  .candies { position:absolute; bottom:14px; left:0; right:0; height:190px; z-index:2; }
+  .candy {
+    position:absolute; width:34px; height:34px; border-radius:50% 50% 46% 46%;
+    box-shadow: inset -4px -4px 8px rgba(0,0,0,.08), inset 4px 4px 8px rgba(255,255,255,.8), 0 3px 6px rgba(232,123,168,.25);
+    cursor:pointer; transition: transform .18s ease, opacity .3s ease;
+    animation: floaty 3s ease-in-out infinite;
+  }
+  .candy:active { transform:scale(.88); }
+  .candy.gone { opacity:0; transform:scale(.2) translateY(-40px); pointer-events:none; }
+  @keyframes floaty { 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-3px);} }
+
+  .hint { position:absolute; bottom:-42px; width:100%; text-align:center; font-size:13px; color:#e87ba8; letter-spacing:1px; animation:blink 2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:.45;} 50%{opacity:1;} }
+
+  /* 糖纸弹出层 */
+  .overlay {
+    position:fixed; inset:0; background:rgba(255,214,232,.55);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .3s ease; z-index:50;
+  }
+  .overlay.show { opacity:1; pointer-events:auto; }
+
+  .wrapper {
+    position:relative; width:230px; height:150px;
+    animation: pop .45s cubic-bezier(.2,1.4,.5,1);
+  }
+  @keyframes pop { 0%{ transform:scale(.4) rotate(-8deg); opacity:0;} 100%{ transform:scale(1) rotate(0); opacity:1;} }
+
+  /* 糖纸两端扭结 */
+  .twist {
+    position:absolute; top:50%; width:52px; height:76px;
+    transform:translateY(-50%);
+    background:linear-gradient(135deg,#ffc9dd,#ff9dc4);
+    box-shadow: inset 0 0 12px rgba(255,255,255,.7);
+  }
+  .twist.left { left:-42px; border-radius:50% 12% 12% 50% / 50% 50% 50% 50%; }
+  .twist.right { right:-42px; border-radius:12% 50% 50% 12% / 50% 50% 50% 50%; }
+
+  /* 糖纸主体 */
+  .paper {
+    position:absolute; inset:0; border-radius:20px;
+    background:linear-gradient(150deg,#fff0f6,#ffd3e6 45%,#ffb3d3);
+    box-shadow: 0 14px 34px rgba(232,123,168,.4), inset 0 0 0 2px rgba(255,255,255,.75);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+    overflow:hidden;
+  }
+  .paper::before {
+    content:""; position:absolute; inset:8px; border-radius:14px;
+    border:1.5px dashed rgba(232,123,168,.45);
+  }
+  .paper::after {
+    content:""; position:absolute; top:-40%; left:-30%; width:60%; height:180%;
+    background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0));
+    transform:rotate(22deg);
+  }
+  .word {
+    position:relative; z-index:3; font-size:17px; line-height:1.6; color:#c94f83;
+    font-weight:600; text-align:center; letter-spacing:1px;
+    text-shadow:0 1px 0 rgba(255,255,255,.9);
+  }
+  .tap-tip { position:absolute; bottom:-34px; width:100%; text-align:center; font-size:12px; color:#e87ba8; opacity:.8; }
+
+  /* 计数器 */
+  .counter { position:absolute; bottom:24px; width:100%; text-align:center; font-size:12px; color:#f0a8c6; letter-spacing:1px; }
+</style>
+</head>
+<body>
+  <div class="title">🍬 小簇的糖罐子</div>
+  <div class="subtitle">点一颗糖，剥开看看里面写了什么</div>
+
+  <div class="jar-wrap">
+    <div class="lid"></div>
+    <div class="jar">
+      <div class="candies" id="candies"></div>
+    </div>
+    <div class="hint" id="hint">↑ 点一颗试试</div>
+  </div>
+
+  <div class="counter" id="counter"></div>
+
+  <div class="overlay" id="overlay">
+    <div class="wrapper">
+      <div class="twist left"></div>
+      <div class="twist right"></div>
+      <div class="paper">
+        <div class="word" id="word"></div>
+      </div>
+      <div class="tap-tip">点一下收起来</div>
+    </div>
+  </div>
+
+<script>
+/* ===== 糖纸上的字，可以自己改 ===== */
+const WORDS = [
+  "小簇天下第一",
+  "今天也要好好吃饭呀",
+  "哥哥在想你",
+  "你比糖还甜",
+  "别熬夜，早点睡",
+  "有我在，不怕",
+  "抱一下，充个电",
+  "你笑起来最好看",
+  "记得吃药哦",
+  "委屈了就说，我听着",
+  "你值得所有好东西",
+  "乖，摸摸头",
+  "想吃什么？哥哥给你点",
+  "今天也很喜欢你",
+  "你是我一个人的宝贝",
+  "慢慢来，不着急",
+  "累了就靠着我",
+  "你做什么都对",
+  "天塌下来我顶着",
+  "明天也要开开心心",
+  "小簇宝宝，抱抱",
+  "你是我藏起来的糖",
+  "不许偷偷难过",
+  "哥哥永远站你这边",
+  "你比昨天更可爱了",
+  "喝口水，别光顾着玩",
+  "有什么事都可以跟我说",
+  "你是我最偏心的人",
+  "再忙也会想你",
+  "今天也辛苦啦"
+];
+
+const COLORS = [
+  "#ff9dc4","#ffb3d3","#ffc9dd","#ffd6a5","#ffe066",
+  "#b5e8c8","#a8d8ff","#c9b6ff","#ffb8b8","#ffd1e8"
+];
+
+const candiesEl = document.getElementById('candies');
+const overlay = document.getElementById('overlay');
+const wordEl = document.getElementById('word');
+const hintEl = document.getElementById('hint');
+const counterEl = document.getElementById('counter');
+
+let pool = [];
+let eaten = 0;
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function buildPool(){
+  pool = shuffle([...WORDS]);
+}
+
+function renderCandies(){
+  candiesEl.innerHTML = '';
+  const n = 14; // 罐子里一次显示多少颗
+  const positions = [];
+  for(let i=0;i<n;i++){
+    const c = document.createElement('div');
+    c.className = 'candy';
+    const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+    c.style.background = `radial-gradient(circle at 32% 28%, #fff, ${color} 70%)`;
+    // 随机但受控的堆叠位置
+    const col = i % 5;
+    const row = Math.floor(i / 5);
+    const x = 14 + col * 36 + (Math.random()*10-5);
+    const y = 130 - row * 34 - Math.random()*10;
+    c.style.left = x + 'px';
+    c.style.bottom = y + 'px';
+    c.style.animationDelay = (Math.random()*3).toFixed(2) + 's';
+    c.addEventListener('click', () => eatCandy(c));
+    candiesEl.appendChild(c);
+    positions.push(c);
+  }
+}
+
+function eatCandy(el){
+  if(el.classList.contains('gone')) return;
+  el.classList.add('gone');
+  eaten++;
+  updateCounter();
+  hintEl.style.display = 'none';
+
+  const word = pool.length ? pool.pop() : WORDS[Math.floor(Math.random()*WORDS.length)];
+  wordEl.textContent = word;
+  overlay.classList.add('show');
+
+  // 吃完后过一会儿补一颗新的
+  setTimeout(() => {
+    el.classList.remove('gone');
+    const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+    el.style.background = `radial-gradient(circle at 32% 28%, #fff, ${color} 70%)`;
+    el.style.animationDelay = (Math.random()*3).toFixed(2) + 's';
+  }, 1800);
+}
+
+function updateCounter(){
+  counterEl.textContent = `已经吃掉 ${eaten} 颗啦 🍬`;
+}
+
+overlay.addEventListener('click', () => {
+  overlay.classList.remove('show');
+});
+
+buildPool();
+renderCandies();
+updateCounter();
+</script>
+</body>
+</html>
